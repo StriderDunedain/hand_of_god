@@ -88,7 +88,7 @@ cln () {
 	echo ""
 
 	echo "Following files left:"
-	ll
+	ls -a -A
 }
 
 hod () {
@@ -114,14 +114,16 @@ adv () {
 	else
 		dir_name="$1"
 	fi
-	mkdir "$dir_name" && cd "$dir_name"
+	mkdir -p "$dir_name" && cd "$dir_name"
 }
 
 refresh () { source "$HOME/.zshrc" }
 
 clr () { clear }
 
-ll () { ls -a -A }
+ll () { ls -a -A -l }
+
+la () { ls -a -A }
 
 up () {
 	N=${1:-1}
