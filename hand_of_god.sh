@@ -80,14 +80,14 @@ wrt () {
 }
 
 cln () {
-	echo "Deleting .out files..."
+	echo " +++ Deleting .out files... +++ "
 	rm -f *.out(N)
 
-	echo "Norminette says:"
+	echo " +++ Norminette says: +++ "
 	norminette
 	echo ""
 
-	echo "Following files left:"
+	echo " +++ Following files left: +++ "
 	ls -a -A
 }
 
@@ -115,6 +115,34 @@ adv () {
 		dir_name="$1"
 	fi
 	mkdir -p "$dir_name" && cd "$dir_name"
+}
+
+prev () {
+	setopt -s nullglob
+	dirs=(ex*/)
+
+	up
+
+	curr_dir="${dirs[-1]%/}"  # remove the trailing slash
+	curr_ex_number=${curr_dir:2}
+	prev_ex_number=$(( curr_ex_number - 1 ))
+	prev_ex=$(printf "ex%02d" "prev_ex_number")
+
+	cd "$prev_ex"
+}
+
+next () {
+        setopt -s nullglob
+        dirs=(ex*/)
+
+        up
+
+        curr_dir="${dirs[-1]%/}"  # remove the trailing slash
+        curr_ex_number=${curr_dir:2}
+        next_ex_number=$(( next_ex_number + 1 ))
+        next_ex=$(printf "ex%02d" "next_ex_number")
+
+        cd "$next_ex"
 }
 
 refresh () { source "$HOME/.zshrc" }
