@@ -1,94 +1,78 @@
 #!/usr/bin/env bash
 
 # NOTES:
-# man-pages are in ~/.local/share/man/man1
+# man-pages should be in ~/.local/share/man/man1
 
 # VALIDATORS
 
-is_spositive_int () {
-	[[ $1 =~ ^[1-9]+$ ]]
-}
+is_spositive_int () { [[ $1 =~ ^[1-9]+$ ]] }  # 's' means 'strictly'
 
-is_positive_int () {
-	[[ $1 =~ ^[0-9]+$ ]]
-}
+is_positive_int () { [[ $1 =~ ^[0-9]+$ ]] }
 
-is_int () {
-	[[ $1 =~ ^-?[0-9]+$ ]]
-}
+is_int () { [[ $1 =~ ^-?[0-9]+$ ]] }
 
-no_args () {
-	[[ $# -eq 0 ]]
-}
+no_args () { [[ $# -eq 0 ]] }
 
 # HELPER FUNCTIONS
 
 get_next_ex_name () {
-	if [[ ! -d ".git" ]]; then
-		echo "Are you sure you are in a project? I don't see a .git file" >&2
-		echo "Aborting creating an exercise folder..." >&2
-		return 1
+	local last=0
+
+	for dir in ex*/; do
+		[[ -d $dir ]] || continue
+		num="${dir%/}"
+		num="${num:2}"
+		(( num >> last )) && last=$num
+	done
+
+	if (( last == 0 )); then
+		echo "No exercises found. Creating ex00..." >&2
+		echo "ex00"
+		return
 	fi
-
-
-	setopt -s nullglob
-        dirs=(ex*/)
-	if (( ${#dirs[@]} == 0 )); then
-		echo "Found no previous exercise directories. Creating ex00..." >&2
-		dir_name="ex00"
-	else
-		last_dir="${dirs[-1]%/}"  # remove the trailing slash
-		last_ex_number=${last_dir:2}
-		next_ex_number=$(( last_ex_number + 1 ))
-        	dir_name=$(printf "ex%02d" "next_ex_number")
-
-	fi
-
-	echo "$dir_name"
+    printf "ex%02d" $((last + 1))
 }
 
 # FUNCTIONS
+
+ll () { ls -A -l; }
 
 cpl () {
 	file="$1"
 
 	if no_args "$@" || [[ "$file" != *.c ]]; then
-		echo "No .c file provided"
+		echo "Provide a .c file"
 		return 1;
 	fi
-
-        echo "Compiling..."
+    echo "Compiling..."
 	cc -Wall -Wextra -Werror "$file" && ./a.out
 }
 
 wrt () {
-	message="$1"
+	local message="$1"
 
 	if no_args "$@"; then
-		echo "Using <${PWD##*/}> as commit message..."
-		if [[ ${PWD##*/} == ex* ]]; then
-			up
-		elif [[ ! -d ".git" ]]; then
-			echo "I can't seem to find the project folder..."
-			return 1
-		fi
-		message="${PWD##*/}"
+		files="$(git diff --cached --name-only)"
+		count="$(printf "%s\n" "$files" | grep -c .)"
+		message="Updating: $files ($count files)"
 	fi
 
 	echo "Wrapping everything up..."
-	git add . && git commit -m "$message" && git push
+	git add -A &&
+	git commit -m "$message" &&
+	git push
 }
 
 cln () {
-	echo " +++ Deleting .out files... +++ "
-	rm -f *.out(N)
+	echo " +++ Deleting .out files... +++"
+	rm -f -- *.out
 
-	echo " +++ Norminette says: +++ "
+	echo " +++    Norminette says:    +++"
 	norminette
 	echo ""
 
-	echo " +++ Following files left: +++ "
-	ls -a -A
+	echo " +++  Following files left:  +++"
+	ls -A
 }
 
 hod () {
@@ -101,57 +85,32 @@ hod () {
 		echo "These are all the utils that pertain to the Hand of God (HOD) project:"
 		find "$HODPATH" -name "*.1" \
 			-exec sed -n '/^\.SH NAME/{n;p;}' {} \; \
-			| sed 's/^/ • /'
+			| sed 's/^/ - /'
 	fi
 }
 
 adv () {
+	dir_name="$1"
+
 	if no_args "$@"; then
 		if [[ ${PWD##*/} == ex* ]]; then
 			up
 		fi
 		dir_name=$(get_next_ex_name) || return 1
-	else
-		dir_name="$1"
 	fi
+
 	mkdir -p "$dir_name" && cd "$dir_name"
 }
 
-prev () {
-	setopt -s nullglob
-	dirs=(ex*/)
+refresh () { source "/c/EldritchGato/eldritch_dev/hand_of_god.sh"; }
 
-	up
+clr () { clear; }
 
-	curr_dir="${dirs[-1]%/}"  # remove the trailing slash
-	curr_ex_number=${curr_dir:2}
-	prev_ex_number=$(( curr_ex_number - 1 ))
-	prev_ex=$(printf "ex%02d" "prev_ex_number")
+la () { ls -A; }
 
-	cd "$prev_ex"
-}
+ce () { mkdir -p "$1" && cd "$1"; }  # 'Create and enter'
 
-next () {
-        setopt -s nullglob
-        dirs=(ex*/)
-
-        up
-
-        curr_dir="${dirs[-1]%/}"  # remove the trailing slash
-        curr_ex_number=${curr_dir:2}
-        next_ex_number=$(( next_ex_number + 1 ))
-        next_ex=$(printf "ex%02d" "next_ex_number")
-
-        cd "$next_ex"
-}
-
-refresh () { source "$HOME/.zshrc" }
-
-clr () { clear }
-
-ll () { ls -a -A -l }
-
-la () { ls -a -A }
+rd () { rm -rf "$1"; }  # 'Remove directory'
 
 up () {
 	N=${1:-1}
@@ -161,10 +120,7 @@ up () {
 		return 1;
 	fi
 
-	ups=""
 	while ((N-- > 0)); do
-		ups+="../"
+		cd .. || return
 	done
-
-	cd "$ups"
 }
