@@ -53,14 +53,19 @@ wrt () {
 
 	echo "Wrapping everything up..."
 
+	git add -A
+
 	if no_args "$@"; then
-		files="$(git diff --name-only)"
+		if git diff --cached --name-only --quiet; then
+			echo "No changes detected. Aborting commit"
+			return 1
+		fi
+		files="$(git diff --cached --name-only)"
 		count="$(printf "%s\n" "$files" | grep -c .)"
 		message="Updating: $files ($count files)"
-		echo "Commit message: <$message>"
+		echo "Commit message will be: <$message>"
 	fi
 
-	git add -A &&
 	git commit -m "$message" &&
 	git push
 }
