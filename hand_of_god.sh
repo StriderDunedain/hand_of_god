@@ -35,7 +35,7 @@ get_next_ex_name () {
 
 # FUNCTIONS
 
-ll () { ls -A -l; }
+# ll () { ls -A -l; }
 
 cpl () {
 	file="$1"
@@ -51,13 +51,15 @@ cpl () {
 wrt () {
 	local message="$1"
 
+	echo "Wrapping everything up..."
+
 	if no_args "$@"; then
-		files="$(git diff --cached --name-only)"
+		files="$(git diff --name-only)"
 		count="$(printf "%s\n" "$files" | grep -c .)"
 		message="Updating: $files ($count files)"
+		echo "Commit message: <$message>"
 	fi
 
-	echo "Wrapping everything up..."
 	git add -A &&
 	git commit -m "$message" &&
 	git push
