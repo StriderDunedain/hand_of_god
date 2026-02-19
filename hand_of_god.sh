@@ -82,6 +82,7 @@ wrt () {
 cln () {
 	echo " +++ Deleting .out files... +++ "
 	rm -f *.out(N)
+	rm -f .*.swp(N)
 
 	echo " +++ Norminette says: +++ "
 	norminette
