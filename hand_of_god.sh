@@ -3,6 +3,7 @@
 # NOTES:
 # man-pages should be in ~/.local/share/man/man1
 
+
 # VALIDATORS
 
 is_spositive_int () { [[ $1 =~ ^[1-9]+$ ]] }  # 's' means 'strictly'
@@ -71,14 +72,9 @@ wrt () {
 }
 
 cln () {
-<<<<<<< HEAD
 	echo " +++ Deleting .out files... +++ "
 	rm -f *.out(N)
 	rm -f .*.swp(N)
-=======
-	echo " +++ Deleting .out files... +++"
-	rm -f -- *.out
->>>>>>> 69d54622a3bbd64cc8aaa8a269c8153d09a22ffa
 
 	echo " +++    Norminette says:    +++"
 	norminette
@@ -115,7 +111,10 @@ adv () {
 	mkdir -p "$dir_name" && cd "$dir_name"
 }
 
-refresh () { source "/c/EldritchGato/eldritch_dev/hand_of_god.sh"; }
+refresh () {
+	source .vars
+	source "$HOD_PATH"
+}
 
 clr () { clear; }
 
