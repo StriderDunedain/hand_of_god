@@ -16,16 +16,18 @@ no_args () { [[ $# -eq 0 ]] }
 # HELPER FUNCTIONS
 
 get_next_ex_name () {
+	local found=false
 	local last=0
 
 	for dir in ex*/; do
 		[[ -d $dir ]] || continue
+		found=true
 		num="${dir%/}"
 		num="${num:2}"
-		(( num >> last )) && last=$num
+		(( num > last )) && last=$num
 	done
 
-	if (( last == 0 )); then
+	if ! $found; then
 		echo "No exercises found. Creating ex00..." >&2
 		echo "ex00"
 		return
@@ -33,37 +35,79 @@ get_next_ex_name () {
     printf "ex%02d" $((last + 1))
 }
 
+# Make those a part of existing ones
+
+get_next_ex_name2 () {
+	local found=false
+	local last=0
+
+	for dir in task*/; do
+		[[ -d $dir ]] || continue
+		found=true
+		num="${dir%/}"
+		num="${num:2}"
+		(( num > last )) && last=$num
+	done
+
+	if ! $found; then
+		echo "No tasks found. Creating task1..." >&2
+		echo "task1"
+		return
+	fi
+    printf "task%d" $((last + 1))
+}
+
+nxt () {
+	dir_name="$1"
+
+	if no_args "$@"; then
+		if [[ ${PWD##*/} == task* ]]; then
+			up
+		fi
+		dir_name=$(get_next_ex_name2) || return 1
+	fi
+
+	mkdir -p "$dir_name" && cd "$dir_name"
+}
+
 # FUNCTIONS
 
 # ll () { ls -A -l; }
 
+tsk () {
+	touch "main.cpp" && code -r "main.cpp"
+}
+
 cpl () {
 	file="$1"
 
-	if no_args "$@" || [[ "$file" != *.c ]]; then
-		echo "Provide a .c file"
+	if no_args "$@" || { [[ "$file" != *.c ]] && [[ "$file" != *.cpp ]] }; then
+		echo "Provide a .c / .cpp file"
 		return 1;
 	fi
-    echo "Compiling..."
-	cc -Wall -Wextra -Werror "$file" && ./a.out
+	if [[ "$file" != *.c ]]; then
+		gcc -Wall -Wextra -Werror "$file" -o a.out && ./a.out
+		return 1;
+	fi
+	g++ -o "$file" a.out && ./a.out
 }
 
 wrt () {
 	local message="$1"
 
-	echo "Wrapping everything up..."
+	echo " +++       Wrapping everything up       +++"
 
 	git add -A
 
 	if no_args "$@"; then
 		if git diff --cached --name-only --quiet; then
-			echo "No changes detected. Aborting commit"
+			echo " +++ No changes detected. Aborting commit +++"
 			return 1
 		fi
 		files="$(git diff --cached --name-only)"
 		count="$(printf "%s\n" "$files" | grep -c .)"
 		message="Updating: $files ($count files)"
-		echo "Commit message will be: <$message>"
+		echo " +++ Commit message will be: <$message> +++"
 	fi
 
 	git commit -m "$message" &&
@@ -73,6 +117,7 @@ wrt () {
 cln () {
 	echo " +++ Deleting .out files... +++"
 	rm -f -- *.out
+	rm -f -- *.exe
 
 	echo " +++    Norminette says:    +++"
 	norminette
@@ -109,7 +154,7 @@ adv () {
 	mkdir -p "$dir_name" && cd "$dir_name"
 }
 
-refresh () { source "/c/EldritchGato/eldritch_dev/hand_of_god.sh"; }
+refresh () { source "C:/EldritchGato/eldritch_dev/hand_of_god/hand_of_god.sh"; }
 
 clr () { clear; }
 
