@@ -73,46 +73,115 @@ nxt () {
 
 # FUNCTIONS
 
-# ll () { ls -A -l; }
+ll () { ls -A -l; }
 
 tsk () {
 	touch "main.cpp" && code -r "main.cpp"
 }
 
 cpl () {
-	file="$1"
+    local simple=false;
+	local debug=false;
+	local outfile="a.out"
 
-	if no_args "$@" || { [[ "$file" != *.c ]] && [[ "$file" != *.cpp ]] }; then
-		echo "Provide a .c / .cpp file"
-		return 1;
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+			-s) simple=true ;;
+			-g) garbage=true ;;
+			*) break ;;
+		esac
+		shift
+	done
+
+	local cmd=(cc)
+	if ! $simple; then
+		cmd+=("-Wall" "-Wextra" "-Werror")
 	fi
-	if [[ "$file" != *.c ]]; then
-		gcc -Wall -Wextra -Werror "$file" -o a.out && ./a.out
-		return 1;
+
+	if $garbage; then
+		cmd+=("-g")
 	fi
-	g++ -o "$file" a.out && ./a.out
+
+	cmd+=("-o" "$outfile")
+	cmd+=("$@")
+
+	if "${cmd[@]}"; then
+		"./$outfile"
+	else
+		echo "Build failed"
+		return 1
+	fi
 }
 
 wrt () {
-	local message="$1"
+	printf "Wrapping everything up...\n\n"
 
-	echo " +++       Wrapping everything up       +++"
+	if ! norminette; then
+		printf "\nNorm errors found. Fix before committing\n" >&2
+		return 1
+	fi
+
+	printf "\n"
+
+	local artifact_files=( *.out(N) *.o(N) *.a(N) )
+
+	if (( ${#artifact_files} > 0 )); then
+		printf "These files will be deleted prior to commit:\n"
+		printf "  %s;\n" "${artifact_files[@]}"
+
+		read "answer?Delete those files? (y/n): "
+
+		if [[ "$answer" == [Yy] ]]; then
+			rm -- "${artifact_files[@]}"
+			printf "Deleted. Proceding with the commit\n"
+		elif [[ "$answer" == [Nn] ]]; then
+			printf "Commiting with files present\n"
+		else
+			printf "Invalid answer: '%s'. Aborting\n" "$answer" >&2
+			return 1
+		fi
+	fi
 
 	git add -A
 
-	if no_args "$@"; then
-		if git diff --cached --name-only --quiet; then
-			echo " +++ No changes detected. Aborting commit +++"
-			return 1
-		fi
-		files="$(git diff --cached --name-only)"
-		count="$(printf "%s\n" "$files" | grep -c .)"
-		message="Updating: $files ($count files)"
-		echo " +++ Commit message will be: <$message> +++"
+	if git diff --cached --name-only --quiet; then
+		printf "\nNo changes detected. Aborting commit\n" >&2
+		return 1
 	fi
 
-	git commit -m "$message" &&
-	git push
+	typeset -A status_map
+
+	while IFS=$'\t' read -r git_status file; do
+		status_map["$file"]="$git_status"
+	done < <(git diff --cached --name-status)
+
+	local staged_files=( ${(k)status_map} )
+
+	printf "\nStaged files:\n"
+	printf "  %s\n" "${staged_files[@]}"
+
+	local message="$1"
+	if [[ -z "$message" ]]; then
+		local message_parts=()
+		local count=${#staged_files}
+
+		local file_num="file"
+		(( count != 1 )) && file_num="files"
+
+		for file in "${staged_files[@]}"; do
+			message_parts+=("${file}(${status_map[$file]})")
+		done
+
+		message="Diff: ${(j:, :)message_parts} (${count} ${file_num})"
+	fi
+	printf "\nCommit message will be: \n<%s>\n\n" "$message"
+	
+	if git commit -m "$message"; then
+		git push
+	else
+		printf "\nCommit failed. Aborting\n" >&2
+		return 1
+	fi
 }
 
 cln () {
@@ -155,22 +224,15 @@ adv () {
 	mkdir -p "$dir_name" && cd "$dir_name"
 }
 
-refresh () { source "C:/EldritchGato/eldritch_dev/hand_of_god/hand_of_god.sh"; }
-# refresh () {
-# 	source "$HOD_PATH"
-# }
-
-vback () {
-	
-}  # Obsidian vault back-up
+refresh () { source "$HOD_PATH" }
 
 clr () { clear; }
 
-la () { ls -A; }
+la () { ls -A $1; }
 
 ce () { mkdir -p "$1" && cd "$1"; }  # 'Create and enter'
 
-rd () { rm -rf "$1"; }  # 'Remove directory'
+rd () { rm -rf "$@"; }  # 'Remove directory'
 
 up () {
 	N=${1:-1}
@@ -184,3 +246,21 @@ up () {
 		cd .. || return
 	done
 }
+
+work () { cd "$WORK_DIR_PATH" }
+
+pr () {
+	[[ -z "$WORK_DIR_PATH" ]] && echo "WORK_PATH_DIR is not set" && return 1
+
+	local query="$1"
+	local project=$(find "$WORK_DIR_PATH" -maxdepth 1 -type d -printf "%f\n" \
+		| fzf --filter="$query" | head -n 1) || return
+
+	[[ -z "$project" ]] && echo "No match found" && return 1
+
+	cd "${WORK_DIR_PATH}/${project}" || return
+}
+
+evl () { cd "$EVAL_PATH" }
+
+md () { mkdir -p "$1" }
