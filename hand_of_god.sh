@@ -36,7 +36,7 @@ get_next_ex_name () {
 
 # FUNCTIONS
 
-# ll () { ls -A -l; }
+ll () { ls -A -l; }
 
 cpl () {
     local simple=false;
@@ -79,11 +79,16 @@ wrt () {
 
 	local files=( *.out(N) *.o(N) )
 
+	if ! norminette; then
+		echo "Norm errors found. Fix before commiting"
+		return 1
+	fi
+
 	if (( ${#files} > 0)); then
 		echo "These files will be deleted prior to commit:"
 		printf "%s\n" "${files[@]}"
 
-		read -p "Delete those files? (y/n): " answer
+		read "answer?Delete those files? (y/n): "
 
 		if [[ "$answer" =~ ^[Yy]$ ]]; then
 			rm -- "${files[@]}"
