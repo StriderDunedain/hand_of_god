@@ -155,9 +155,14 @@ adv () {
 	mkdir -p "$dir_name" && cd "$dir_name"
 }
 
-refresh () {
-	source "$HOD_PATH"
-}
+refresh () { source "C:/EldritchGato/eldritch_dev/hand_of_god/hand_of_god.sh"; }
+# refresh () {
+# 	source "$HOD_PATH"
+# }
+
+vback () {
+	
+}  # Obsidian vault back-up
 
 clr () { clear; }
 
