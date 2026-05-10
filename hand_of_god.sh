@@ -39,20 +39,59 @@ get_next_ex_name () {
 # ll () { ls -A -l; }
 
 cpl () {
-	file="$1"
+    local simple=false;
+	local debug=false;
+	local outfile="a.out"
 
-	if no_args "$@" || [[ "$file" != *.c ]]; then
-		echo "Provide a .c file"
-		return 1;
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+			-s) simple=true ;;
+			-g) garbage=true ;;
+			*) break ;;
+		esac
+		shift
+	done
+
+	local cmd=(cc)
+	if ! $simple; then
+		cmd+=("-Wall" "-Wextra" "-Werror")
 	fi
-    echo "Compiling..."
-	cc -Wall -Wextra -Werror "$file" && ./a.out
+
+	if $garbage; then
+		cmd+=("-g")
+	fi
+
+	cmd+=("-o" "$outfile")
+	cmd+=("$@")
+
+	if "${cmd[@]}"; then
+		"./$outfile"
+	else
+		echo "Build failed"
+		return 1
+	fi
 }
 
 wrt () {
 	local message="$1"
 
 	echo "Wrapping everything up..."
+
+	local files=( *.out(N) *.o(N) )
+
+	if (( ${#files} > 0)); then
+		echo "These files will be deleted prior to commit:"
+		printf "%s\n" "${files[@]}"
+
+		read -p "Delete those files? (y/n): " answer
+
+		if [[ "$answer" =~ ^[Yy]$ ]]; then
+			rm -- "${files[@]}"
+			echo "Deleted. Proceding with the commit"
+		else
+			echo "Will commit with these files"
+		fi
+	fi
 
 	git add -A
 
@@ -111,18 +150,15 @@ adv () {
 	mkdir -p "$dir_name" && cd "$dir_name"
 }
 
-refresh () {
-	source .vars
-	source "$HOD_PATH"
-}
+refresh () { source "$HOD_PATH" }
 
 clr () { clear; }
 
-la () { ls -A; }
+la () { ls -A $1; }
 
 ce () { mkdir -p "$1" && cd "$1"; }  # 'Create and enter'
 
-rd () { rm -rf "$1"; }  # 'Remove directory'
+rd () { rm -rf "$@"; }  # 'Remove directory'
 
 up () {
 	N=${1:-1}
@@ -136,3 +172,21 @@ up () {
 		cd .. || return
 	done
 }
+
+work () { cd "$WORK_DIR_PATH" }
+
+pr () {
+	[[ -z "$WORK_DIR_PATH" ]] && echo "WORK_PATH_DIR is not set" && return 1
+
+	local query="$1"
+	local project=$(find "$WORK_DIR_PATH" -maxdepth 1 -type d -printf "%f\n" \
+		| fzf --filter="$query" | head -n 1) || return
+
+	[[ -z "$project" ]] && echo "No match found" && return 1
+
+	cd "${WORK_DIR_PATH}/${project}" || return
+}
+
+evl () { cd "$EVAL_PATH" }
+
+md () { mkdir -p "$1" }
