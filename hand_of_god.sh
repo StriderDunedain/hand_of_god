@@ -73,46 +73,74 @@ cpl () {
 }
 
 wrt () {
-	local message="$1"
-
-	echo "Wrapping everything up..."
-
-	local files=( *.out(N) *.o(N) )
+	printf "Wrapping everything up...\n\n"
 
 	if ! norminette; then
-		echo "Norm errors found. Fix before commiting"
+		printf "\nNorm errors found. Fix before committing\n" >&2
 		return 1
 	fi
 
-	if (( ${#files} > 0)); then
-		echo "These files will be deleted prior to commit:"
-		printf "%s\n" "${files[@]}"
+	printf "\n"
+
+	local artifact_files=( *.out(N) *.o(N) *.a(N) )
+
+	if (( ${#artifact_files} > 0 )); then
+		printf "These files will be deleted prior to commit:\n"
+		printf "  %s;\n" "${artifact_files[@]}"
 
 		read "answer?Delete those files? (y/n): "
 
-		if [[ "$answer" =~ ^[Yy]$ ]]; then
-			rm -- "${files[@]}"
-			echo "Deleted. Proceding with the commit"
+		if [[ "$answer" == [Yy] ]]; then
+			rm -- "${artifact_files[@]}"
+			printf "Deleted. Proceding with the commit\n"
+		elif [[ "$answer" == [Nn] ]]; then
+			printf "Commiting with files present\n"
 		else
-			echo "Will commit with these files"
+			printf "Invalid answer: '%s'. Aborting\n" "$answer" >&2
+			return 1
 		fi
 	fi
 
 	git add -A
 
-	if no_args "$@"; then
-		if git diff --cached --name-only --quiet; then
-			echo "No changes detected. Aborting commit"
-			return 1
-		fi
-		files="$(git diff --cached --name-only)"
-		count="$(printf "%s\n" "$files" | grep -c .)"
-		message="Updating: $files ($count files)"
-		echo "Commit message will be: <$message>"
+	if git diff --cached --name-only --quiet; then
+		printf "\nNo changes detected. Aborting commit\n" >&2
+		return 1
 	fi
 
-	git commit -m "$message" &&
-	git push
+	typeset -A status_map
+
+	while IFS=$'\t' read -r git_status file; do
+		status_map["$file"]="$git_status"
+	done < <(git diff --cached --name-status)
+
+	local staged_files=( ${(k)status_map} )
+
+	printf "\nStaged files:\n"
+	printf "  %s\n" "${staged_files[@]}"
+
+	local message="$1"
+	if [[ -z "$message" ]]; then
+		local message_parts=()
+		local count=${#staged_files}
+
+		local file_num="file"
+		(( count != 1 )) && file_num="files"
+
+		for file in "${staged_files[@]}"; do
+			message_parts+=("${file}(${status_map[$file]})")
+		done
+
+		message="Diff: ${(j:, :)message_parts} (${count} ${file_num})"
+	fi
+	printf "\nCommit message will be: \n<%s>\n\n" "$message"
+	
+	if git commit -m "$message"; then
+		git push
+	else
+		printf "\nCommit failed. Aborting\n" >&2
+		return 1
+	fi
 }
 
 cln () {
