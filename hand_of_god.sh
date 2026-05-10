@@ -73,8 +73,6 @@ nxt () {
 
 # FUNCTIONS
 
-ll () { ls -A -l; }
-
 tsk () {
 	touch "main.cpp" && code -r "main.cpp"
 }
@@ -133,9 +131,9 @@ wrt () {
 
 		if [[ "$answer" == [Yy] ]]; then
 			rm -- "${artifact_files[@]}"
-			printf "Deleted. Proceding with the commit\n"
+			printf "Deleted. Proceeding with the commit\n"
 		elif [[ "$answer" == [Nn] ]]; then
-			printf "Commiting with files present\n"
+			printf "Committing with files present\n"
 		else
 			printf "Invalid answer: '%s'. Aborting\n" "$answer" >&2
 			return 1
@@ -230,9 +228,17 @@ clr () { clear; }
 
 la () { ls -A $1; }
 
+ll () { ls -A -l; }
+
 ce () { mkdir -p "$1" && cd "$1"; }  # 'Create and enter'
 
 rd () { rm -rf "$@"; }  # 'Remove directory'
+
+md () { mkdir -p "$1" }
+
+work () { cd "$WORK_DIR_PATH" }
+
+evl () { cd "$EVAL_PATH" }
 
 up () {
 	N=${1:-1}
@@ -247,8 +253,6 @@ up () {
 	done
 }
 
-work () { cd "$WORK_DIR_PATH" }
-
 pr () {
 	[[ -z "$WORK_DIR_PATH" ]] && echo "WORK_PATH_DIR is not set" && return 1
 
@@ -260,7 +264,3 @@ pr () {
 
 	cd "${WORK_DIR_PATH}/${project}" || return
 }
-
-evl () { cd "$EVAL_PATH" }
-
-md () { mkdir -p "$1" }
