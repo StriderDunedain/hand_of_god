@@ -14,61 +14,60 @@ is_int () { [[ $1 =~ ^-?[0-9]+$ ]] }
 
 no_args () { [[ $# -eq 0 ]] }
 
-# HELPER FUNCTIONS
+adv () {
+	local prefix="ex"
+	local width=2
 
-get_next_ex_name () {
-	local found=false
-	local last=0
+	local OPTIND opt
 
-	for dir in ex*/; do
-		[[ -d $dir ]] || continue
-		found=true
-		num="${dir%/}"
-		num="${num:2}"
+	while getopts "p:w:n" opt; do
+		case "$opt" in
+			p) prefix="$OPTARG" ;;
+			w) width="$OPTARG" ;;
+			n) width=0 ;;
+			*) return 1 ;;
+		esac
+	done
+
+	shift $((OPTIND - 1))
+
+	local root dir_name
+
+	root=$(git rev-parse --show-toplevel 2>/dev/null) || return 1
+
+	# if inside prefixNN go to git root
+	if [[ ${PWD:t} == ${prefix}<-> ]]; then
+		cd "$root" || return 1
+	fi
+
+	dir_name=$(_get_next_name "$prefix") || return 1
+
+	mkdir -p "$dir_name" &&
+	cd "$dir_name"
+
+	if [[ "$prefix" == task ]]; then
+		tsk || return 1;
+	fi
+}
+
+_get_next_name () {
+	local prefix="$1"
+	local last="$2"
+
+	local dir num last=-1 format
+
+	for dir in ${prefix}<->(/N); do
+		num="${dir#$prefix}"
 		(( num > last )) && last=$num
 	done
 
-	if ! $found; then
-		echo "No exercises found. Creating ex00..." >&2
-		echo "ex00"
-		return
-	fi
-    printf "ex%02d" $((last + 1))
-}
-
-# Make those a part of existing ones
-
-get_next_ex_name2 () {
-	local found=false
-	local last=0
-
-	for dir in task*/; do
-		[[ -d $dir ]] || continue
-		found=true
-		num="${dir%/}"
-		num="${num:2}"
-		(( num > last )) && last=$num
-	done
-
-	if ! $found; then
-		echo "No tasks found. Creating task1..." >&2
-		echo "task1"
-		return
-	fi
-    printf "task%d" $((last + 1))
-}
-
-nxt () {
-	dir_name="$1"
-
-	if no_args "$@"; then
-		if [[ ${PWD##*/} == task* ]]; then
-			up
-		fi
-		dir_name=$(get_next_ex_name2) || return 1
+	if (( width > 0 )); then
+		format="%0${width}d"
+	else
+		format="%d"
 	fi
 
-	mkdir -p "$dir_name" && cd "$dir_name"
+	printf "%s${format}\n" "$prefix" $((last + 1))
 }
 
 # FUNCTIONS
@@ -114,6 +113,11 @@ cpl () {
 wrt () {
 	printf "Wrapping everything up...\n\n"
 
+	if [[ ! -f README.md ]]; then
+		printf "Add a README.md file. Aborting\n"
+		return 1
+	fi
+
 	if ! norminette; then
 		printf "\nNorm errors found. Fix before committing\n" >&2
 		return 1
@@ -138,6 +142,13 @@ wrt () {
 			printf "Invalid answer: '%s'. Aborting\n" "$answer" >&2
 			return 1
 		fi
+	fi
+
+	local git_dirs=( */**/.git(ND) )
+
+	if (( ${#git_dirs} > 0)); then
+		printf "Nested git repos found. Aborting\n"
+		return 1
 	fi
 
 	git add -A
@@ -183,6 +194,8 @@ wrt () {
 }
 
 cln () {
+
+	echo "FUNCTION HAS BEEN DEPRECATED, USE 'wrt()' INSTEAD!"
 	echo " +++ Deleting .out files... +++ "
 	rm -f *.out(N)
 	rm -f .*.swp(N)
@@ -207,19 +220,6 @@ hod () {
 			-exec sed -n '/^\.SH NAME/{n;p;}' {} \; \
 			| sed 's/^/ - /'
 	fi
-}
-
-adv () {
-	dir_name="$1"
-
-	if no_args "$@"; then
-		if [[ ${PWD##*/} == ex* ]]; then
-			up
-		fi
-		dir_name=$(get_next_ex_name) || return 1
-	fi
-
-	mkdir -p "$dir_name" && cd "$dir_name"
 }
 
 refresh () { source "$HOD_PATH" }
