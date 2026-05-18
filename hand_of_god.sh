@@ -15,8 +15,13 @@ is_int () { [[ $1 =~ ^-?[0-9]+$ ]] }
 no_args () { [[ $# -eq 0 ]] }
 
 adv () {
-	local prefix="ex"
-	local width=2
+	local root
+	root=$(git rev-parse --show-toplevel 2>/dev/null) || return 1
+	root="${root:A}"
+	local prefix="${ADV_PREFIX[$root]:-ex}"
+	local width="${ADV_WIDTH[$root]:-1}"
+	local name_required="${ADV_NAME_REQUIRED[$root]:-0}"
+	local dir_name
 
 	local OPTIND opt
 
@@ -31,33 +36,35 @@ adv () {
 
 	shift $((OPTIND - 1))
 
-	local root dir_name
+	local ex_name="$1"
 
-	root=$(git rev-parse --show-toplevel 2>/dev/null) || return 1
+	if (( name_required )) && [[ -z $ex_name ]]; then
+		printf "Project requires an exercise name\n" >&2
+		return 1
+	fi
 
-	# if inside prefixNN go to git root
+	# if inside prefix* go to git root
 	if [[ ${PWD:t} == ${prefix}<-> ]]; then
 		cd "$root" || return 1
 	fi
 
-	dir_name=$(_get_next_name "$prefix") || return 1
+	dir_name=$(_get_next_name "$prefix" "$width") || return 1
 
 	mkdir -p "$dir_name" &&
 	cd "$dir_name"
 
-	if [[ "$prefix" == task ]]; then
-		tsk || return 1;
-	fi
+	tsk "$prefix" "$ex_name" || return 1
 }
 
 _get_next_name () {
 	local prefix="$1"
-	local last="$2"
+	local width="$2"
 
 	local dir num last=-1 format
 
 	for dir in ${prefix}<->(/N); do
-		num="${dir#$prefix}"
+		num="${dir:t}"
+		num="${num#$prefix}"
 		(( num > last )) && last=$num
 	done
 
@@ -73,7 +80,19 @@ _get_next_name () {
 # FUNCTIONS
 
 tsk () {
-	touch "main.cpp" && code -r "main.cpp"
+	local prefix="$1"
+	local ex_name="$2"
+
+	case "$prefix" in
+		task)
+			touch main.cpp &&
+			code -r main.cpp
+			;;
+		ex)
+			touch "${ex_name}.py" &&
+			code -r "${ex_name}.py"
+			;;
+	esac
 }
 
 cpl () {
@@ -193,6 +212,28 @@ wrt () {
 	fi
 }
 
+evl () {
+	cd "$EVAL_PATH" || return
+
+	[ $# -eq 0 ] && return
+
+	local pr_link="$1"
+
+	find . -mindepth 1 -maxdepth 1 -type d -exec rm -rf -- {} +
+
+	git clone "$pr_link" || {
+		printf "git clone failed"
+		return 1
+	}
+
+	cd ./*/ || {
+		printf "Could not enter cloned dir"
+		return 1
+	}
+		
+	code .
+}
+
 cln () {
 
 	echo "FUNCTION HAS BEEN DEPRECATED, USE 'wrt()' INSTEAD!"
@@ -234,11 +275,16 @@ ce () { mkdir -p "$1" && cd "$1"; }  # 'Create and enter'
 
 rd () { rm -rf "$@"; }  # 'Remove directory'
 
-md () { mkdir -p "$1" }
+md () { mkdir -p "$@" }
 
 work () { cd "$WORK_DIR_PATH" }
 
-evl () { cd "$EVAL_PATH" }
+py () {
+	[ $# -eq 0 ] && return
+	clear && python -I "$@"
+}
+
+cpr () { cd "$CURRENT_PROJECT" }
 
 up () {
 	N=${1:-1}
