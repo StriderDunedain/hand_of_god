@@ -8,7 +8,7 @@ export EVAL_PATH="$WORK_DIR_PATH/evals"
 
 # HOD FUNCTIONS
 
-center_text() {
+_center_text() {
   local width=$(tput cols)
   while IFS= read -r line; do
     local len=${#line}
@@ -22,20 +22,6 @@ _pr_completion() {
     projects=(${(f)"$(find "$WORK_DIR_PATH" -mindepth 1 -maxdepth 1 -type d -printf "%f\n")"})
 
     _describe 'projects' projects
-}
-
-hod () {
-	local HOD_MAN_PATH="$HOME/.local/share/man/man1"
-	cmd_name="$1"
-
-	if [[ $# -eq 1 ]]; then
-		vim "$HOD_MAN_PATH/$cmd_name.1"
-	else
-		printf "These are all the utils that pertain to the Hand of God (HOD) project:"
-		find "$HOD_MAN_PATH" -name "*.1" \
-			-exec sed -n '/^\.SH NAME/{n;p;}' {} \; \
-			| sed 's/^/ - /'
-	fi
 }
 
 _refresh () {
@@ -76,7 +62,7 @@ ADV_WIDTH[$WORK_DIR_PATH/piscine]=2
 compdef _pr_completion pr
 
 # pyfiglet -f small "Praise the Emperor!" | center_text
-# center_text << "EOF"
+# _center_text << "EOF"
 # ;+xxxxxxxxxxxxxxxXXXXXXXXXXXXXXXX$$$$+                      :$&&&&&&&&&&&&&&&$$$$$$$$$$$XXXXXXXXXXX;
 #  +&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&X.                         .&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&x  
 #  .xxxxx+++;;;::::::::;;++xXX$&&&$:    ;&;&&&x.     :x&&&&;     +&&&&&&&&&&&$Xxx+;;::........ ..    

@@ -36,12 +36,12 @@ adv () {
 		cd "$root" || return 1
 	fi
 
-	dir_name=$(_get_next_name "$prefix" "$width") || return 1
+	dir_name=$(_adv_get_next_name "$prefix" "$width") || return 1
 
 	mkdir -p "$dir_name" &&
 	cd "$dir_name"
 
-	_task "$prefix" "$ex_name" || return 1
+	_adv_task "$prefix" "$ex_name" || return 1
 }
 
 evl () {
@@ -67,21 +67,37 @@ evl () {
 }
 
 pr () {
-	[[ -z "$WORK_DIR_PATH" ]] && echo "WORK_PATH_DIR is not set" && return 1
+	[[ -z "$WORK_DIR_PATH" ]] && {
+		echo "WORK_DIR_PATH is not set" >&2
+		return 1
+	}
+
+	if [[ $# -eq 0 ]]; then
+		cd "$WORK_DIR_PATH" || return 1
+		return 0
+	fi
 
 	local query="$1"
-	local project=$(find "$WORK_DIR_PATH" -maxdepth 1 -type d -printf "%f\n" \
-		| fzf --filter="$query" | head -n 1) || return
 
-	[[ -z "$project" ]] && echo "No match found" && return 1
+	local project
+	project=$(
+		find "$WORK_DIR_PATH" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" 2>/dev/null \
+		| fzf --filter="$query" \
+		| head -n 1
+	) || return 1
 
-	cd "${WORK_DIR_PATH}/${project}" || return
+	[[ -z "$project" ]] && {
+		echo "No match found" >&2
+		return 1
+	}
+
+	cd "$WORK_DIR_PATH/$project" || return 1
 }
 
 
 work () { cd "$WORK_DIR_PATH" }
 
-cpr () { cd "$CURRENT_PROJECT" }
+cpr () { cd "$CURRENT_PROJECT" }  # 'current project'
 
 # PYTHON
 
@@ -90,45 +106,85 @@ py () {
 	clear && python -I "$@"
 }
 
-# C
+# C/C++
 
 cpl () {
-    local simple=false;
-	local debug=false;
-	local outfile="a.out"
+	local compiler=cc
+	local outfile=a.out
+
+	local verbose=false
+	local dry_run=false
+
+	local -a flags=()
+	local -a sources=()
+	local -a run_args=()
 
 	while [[ $# -gt 0 ]]; do
-		case "$1" in
-			-s) simple=true ;;
-			-g) garbage=true ;;
-			*) break ;;
+		case $1 in
+			-s|--simple)
+				flags+=(-Wall -Wextra -Werror) ;;
+			-g|--debug)
+				flags+=(-g) ;;
+			-n|--dry-run)
+				dry_run=true ;;
+			-v|--verbose)
+				verbose=true ;;
+			--)
+				shift
+				run_args=("$@")
+				break ;;
+			*)
+				sources+=("$1") ;;
 		esac
 		shift
 	done
-
-	local cmd=(cc)
-	if ! $simple; then
-		cmd+=("-Wall" "-Wextra" "-Werror")
+	
+	if ((${#sources[@]} == 0)); then
+		echo "No source files"
+		return 1
 	fi
 
-	if $garbage; then
-		cmd+=("-g")
+	local file
+	for file in "${sources[@]}"; do
+		case $file in
+			*.cpp|*.cc|*.cxx|*.CPP)
+				compiler=g++
+				break ;;
+		esac
+	done
+
+	local -a cmd=(
+		"$compiler"
+		"${flags[@]}"
+		-o "$outfile"
+		"${sources[@]}"
+	)
+
+	if $verbose || $dry_run; then
+		printf 'Compile: '
+		printf '%q ' "${cmd[@]}"
+		printf '\n'
+
+		printf 'Run: ./%q ' "$outfile"
+		printf '%q ' "${run_args[@]}"
+		printf '\n'
+
+		if $dry_run; then
+			return 0
+		fi
 	fi
-
-	cmd+=("-o" "$outfile")
-	cmd+=("$@")
-
-	if "${cmd[@]}"; then
-		"./$outfile"
-	else
+ 
+	if ! "${cmd[@]}"; then
 		echo "Build failed"
 		return 1
 	fi
+
+	"./$outfile" "${run_args[@]}"
 }
 
-# SUPPOT FUNCTIONS
+# SUPPORT FUNCTIONS
 
-_get_next_name () {
+_adv_get_next_name () {
 	local prefix="$1"
 	local width="$2"
 
@@ -149,7 +205,7 @@ _get_next_name () {
 	printf "%s${format}\n" "$prefix" $((last + 1))
 }
 
-_task () {
+_adv_task () {
 	local prefix="$1"
 	local ex_name="$2"
 

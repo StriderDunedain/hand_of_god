@@ -17,3 +17,17 @@ cln () {
 	echo " +++  Following files left:  +++"
 	ls -A
 }
+
+hod () {
+	local HODPATH="$HOME/.local/share/man/man1"
+	cmd_name="$1"
+
+	if [[ $# -eq 1 ]]; then
+		nano "$HODPATH/$cmd_name.1"
+	else
+		echo "These are all the utils that pertain to the Hand of God (HOD) project:"
+		find "$HODPATH" -name "*.1" \
+			-exec sed -n '/^\.SH NAME/{n;p;}' {} \; \
+			| sed 's/^/ - /'
+	fi
+}

@@ -1,15 +1,138 @@
-.TH adv 1
+.TH adv
 .SH NAME
-adv - mkdir a dir and cd into it
+adv - create and enter sequential exercise/task directories in a git project
 
-.SH SYNOPSYS
-adv [DIR_NAME]
+.SH SYNOPSIS
+.B adv
+[\-p prefix] [\-w width] [\-n] [name]
 
 .SH DESCRIPTION
-.LP
-(1) [DIR_NAME] Create a directory with the provided name and cd into it.
-.LP
-(2) Create and cd into the next exercise either from a .../ex* dir or a project dir. Currently works only on zsh terminals, bash update is coming
+.B adv
+is a helper function for working inside git-based learning or exercise projects.
+
+It automatically determines the git repository root and creates a new sequential
+directory based on a prefix pattern (e.g. ex0, ex1, ex2 or task0, task1, etc.) at root.
+
+The function then enters the newly created directory and initializes a starter file
+based on the selected prefix.
+
+Directory numbering is determined by scanning existing directories matching:
+
+.RS
+prefix<number>
+.RE
+
+The next highest number is used.
+
+If configured per-repository, behavior can be customized via associative arrays (see more in wiki):
+
+.RS
+ADV_PREFIX[repo_root]
+ADV_WIDTH[repo_root]
+ADV_NAME_REQUIRED[repo_root]
+.RE
+
+.SH OPTIONS
+.TP
+.B \-p prefix
+Override the directory prefix (e.g. ex, task). Default is \fBex\fR.
+
+.TP
+.B \-w width
+Pad numeric suffix with leading zeros.
+For example width 3 produces ex001, ex002, etc.
+
+.TP
+.B \-n
+Disable zero-padding entirely (numeric width = 0).
+
+.SH ARGUMENTS
+.TP
+.B name
+Optional exercise or task name.
+
+Required if ADV_NAME_REQUIRED is set for the repository.
+
+.SH BEHAVIOR
+When executed inside a directory matching the current prefix pattern
+(e.g. ex12), the function first returns to the git root before creating a new entry.
+
+New directories are created sequentially:
+
+.RS
+ex0
+ex1
+ex2
+.RE
+
+or:
+
+.RS
+task00
+task01
+task02
+.RE
+
+depending on configuration.
+
+After creation, the function:
+
+.RS
+1. Enters the new directory
+2. Creates starter files based on prefix
+3. Opens them in VS Code
+.RE
+
+.SH FILE GENERATION
+.TP
+.B prefix = task
+Creates:
+.RS
+main.cpp
+.RE
+and opens it in VS Code.
+
+.TP
+.B prefix = ex
+Creates:
+.RS
+<name>.py
+.RE
+and opens it in VS Code.
+
+.SH EXAMPLES
+.TP
+Create next exercise directory:
+.EX
+adv
+.EE
+
+.TP
+Create exercise with name:
+.EX
+adv sorting
+.EE
+
+.TP
+Create task with padding disabled:
+.EX
+adv -p task -n
+.EE
+
+.TP
+Create exercise with 3-digit numbering:
+.EX
+adv -w 3
+.EE
+
+.SH EXIT STATUS
+.TP
+0
+Success
+
+.TP
+1
+Failure (not inside a git repository, invalid arguments, or directory creation failure)
 
 .SH AUTHOR
 Written by Maksim Trukhinov <eldritch.gato@gmail.com>. GitHub: <StriderDunedain>
