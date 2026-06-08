@@ -9,9 +9,9 @@ wrt () {
 	while [[ $# -gt 0 ]]; do
 		case $1 in
 			-42)
-				checks_42=true ;;
+				checks_42=1 ;;
 			--no_readme)
-				no_readme=true ;;
+				no_readme=1 ;;
 			*)
 				break ;;
 		esac
