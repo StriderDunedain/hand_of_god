@@ -97,6 +97,8 @@ pr () {
 
 work () { cd "$WORK_DIR_PATH" }
 
+co () { code . }
+
 cpr () { cd "$CURRENT_PROJECT" }  # 'current project'
 
 # PYTHON

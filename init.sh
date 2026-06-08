@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-export WORK_DIR_PATH="$HOME/dev"
 export MANPATH="$HOME/.local/share/man:$MANPATH"
 
 export CURRENT_PROJECT="$WORK_DIR_PATH/python/module03"
