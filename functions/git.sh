@@ -1,19 +1,27 @@
 #!/usr/bin/env bash
 
 wrt () {
+	local checks_42=0
+	local no_readme=0
+
 	printf "Wrapping everything up...\n\n"
 
-	if [[ ! -f README.md ]]; then
-		printf "Add a README.md file. Aborting\n"
-		return 1
-	fi
+	while [[ $# -gt 0 ]]; do
+		case $1 in
+			-42)
+				checks_42=true ;;
+			--no_readme)
+				no_readme=true ;;
+			*)
+				break ;;
+		esac
+		shift
+	done
 
-	if ! norminette; then
-		printf "\nNorm errors found. Fix before committing\n" >&2
-		return 1
+	if [[ $checks_42 -eq 1 ]]; then
+		_wrt_checks_42 "$no_readme"
+		printf "\n"
 	fi
-
-	printf "\n"
 
 	local artifact_files=( *.out(N) *.o(N) *.a(N) )
 
@@ -37,7 +45,7 @@ wrt () {
 	local git_dirs=( */**/.git(ND) )
 
 	if (( ${#git_dirs} > 0)); then
-		printf "Nested git repos found. Aborting\n"
+		printf "Nested git repos found. Aborting\n" >&2
 		return 1
 	fi
 
@@ -82,3 +90,30 @@ wrt () {
 		return 1
 	fi
 }
+
+# SUPPORT FUNCTIONS
+
+_wrt_checks_42 () {
+	local no_readme=$1
+
+	if [[ $no_readme -eq 0 && ! -f README.md ]]; then
+        printf "\nAdd a README.md file. Aborting\n" >&2
+        return 1
+    fi
+
+    if ! norminette; then
+        printf "\nNorm errors found. Fix before committing\n" >&2
+        return 1
+    fi
+}
+
+
+
+
+
+
+
+
+
+
+

@@ -22,6 +22,7 @@ hod () {
 	local HODPATH="$HOME/.local/share/man/man1"
 	cmd_name="$1"
 
+	echo "THIS FUNCTION HAS BEEN DEPRECATED, USE THE WIKI INSTEAD!"
 	if [[ $# -eq 1 ]]; then
 		nano "$HODPATH/$cmd_name.1"
 	else
