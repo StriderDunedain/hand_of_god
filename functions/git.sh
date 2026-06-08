@@ -67,7 +67,7 @@ wrt () {
 	printf "\nStaged files:\n"
 	printf "  %s\n" "${staged_files[@]}"
 
-	local message="$1"
+	local message="$*"
 	if [[ -z "$message" ]]; then
 		local message_parts=()
 		local count=${#staged_files}
