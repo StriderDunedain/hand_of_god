@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export MANPATH="$HOME/.local/share/man:$MANPATH"
+export MAN_PATH="$HOME/.local/share/man/man1"
 
 _pr_completion() {
     local -a projects
