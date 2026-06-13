@@ -12,6 +12,8 @@ rd () { rm -rf "$@"; }  # 'Remove directory'
 
 md () { mkdir -p "$@" }  # 'Make directory'
 
+l () { dm-tool lock }  # Lock screen
+
 up () {
 	N=${1:-1}
 

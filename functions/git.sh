@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 wrt () {
-	local checks_42=0
+	local norm=1
 	local no_readme=0
 
 	printf "Wrapping everything up...\n\n"
 
 	while [[ $# -gt 0 ]]; do
 		case $1 in
-			-42)
-				checks_42=1 ;;
+			--no-norm)
+				norm=0 ;;
 			--no_readme)
 				no_readme=1 ;;
 			*)
@@ -18,8 +18,8 @@ wrt () {
 		shift
 	done
 
-	if [[ $checks_42 -eq 1 ]]; then
-		_wrt_checks_42 "$no_readme"
+	if [[ $norm -eq 1 ]]; then
+		_wrt_42_check "$no_readme"
 		printf "\n"
 	fi
 
@@ -93,7 +93,7 @@ wrt () {
 
 # SUPPORT FUNCTIONS
 
-_wrt_checks_42 () {
+_wrt_42_check () {
 	local no_readme=$1
 
 	if [[ $no_readme -eq 0 && ! -f README.md ]]; then

@@ -67,13 +67,13 @@ evl () {
 }
 
 pr () {
-	[[ -z "$WORK_DIR_PATH" ]] && {
-		echo "WORK_DIR_PATH is not set" >&2
+	[[ -z "$WORK_DIR" ]] && {
+		echo "WORK_DIR is not set" >&2
 		return 1
 	}
 
 	if [[ $# -eq 0 ]]; then
-		cd "$WORK_DIR_PATH" || return 1
+		cd "$WORK_DIR" || return 1
 		return 0
 	fi
 
@@ -81,7 +81,7 @@ pr () {
 
 	local project
 	project=$(
-		find "$WORK_DIR_PATH" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" 2>/dev/null \
+		find "$WORK_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" 2>/dev/null \
 		| fzf --filter="$query" \
 		| head -n 1
 	) || return 1
@@ -91,13 +91,33 @@ pr () {
 		return 1
 	}
 
-	cd "$WORK_DIR_PATH/$project" || return 1
+	cd "$WORK_DIR/$project" || return 1
+}
+
+co () {
+	local -a cmd=(code -r)
+
+	while [[ $# -gt 0 ]]; do
+		case $1 in
+			-nw|--new-window)
+				cmd=(code -n) ;;
+			*)
+				break ;;
+		esac
+		shift
+	done
+
+	if [[ $# -eq 0 ]]; then
+		"${cmd[@]}" .
+	else
+		"${cmd[@]}" "$@"
+	fi
 }
 
 
-work () { cd "$WORK_DIR_PATH" }
+work () { cd "$WORK_DIR" }
 
-co () { code . }
+nr () { norminette }
 
 cpr () { cd "$CURRENT_PROJECT" }  # 'current project'
 

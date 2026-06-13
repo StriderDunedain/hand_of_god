@@ -2,9 +2,6 @@
 
 export MANPATH="$HOME/.local/share/man:$MANPATH"
 
-export CURRENT_PROJECT="$WORK_DIR_PATH/python/module03"
-export EVAL_PATH="$WORK_DIR_PATH/evals"
-
 # HOD FUNCTIONS
 
 _center_text() {
@@ -18,13 +15,13 @@ _center_text() {
 
 _pr_completion() {
     local -a projects
-    projects=(${(f)"$(find "$WORK_DIR_PATH" -mindepth 1 -maxdepth 1 -type d -printf "%f\n")"})
+    projects=(${(f)"$(find "$WORK_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n")"})
 
     _describe 'projects' projects
 }
 
 _refresh () {
-	local dir="$HOME/dev/hand_of_god/functions"
+	local dir="$WORK_DIR/hand_of_god/functions"
 
 	[ -d "$dir" ] || {
 		printf "The functions/ directory not found: %s\n" "$dir"
@@ -42,49 +39,6 @@ refresh () {
 	printf "Functions refreshed\n"
 }
 
-# INIT
-
-typeset -g -A ADV_PREFIX
-typeset -g -A ADV_WIDTH
-typeset -g -A ADV_NAME_REQUIRED
-
-ADV_PREFIX[$CURRENT_PROJECT]="ex"
-ADV_WIDTH[$CURRENT_PROJECT]=1
-ADV_NAME_REQUIRED[$CURRENT_PROJECT]=1
-
-ADV_PREFIX[$WORK_DIR_PATH/uni_cpp]="task"
-ADV_WIDTH[$WORK_DIR_PATH/uni_cpp]=1
-
-ADV_PREFIX[$WORK_DIR_PATH/piscine]="ex"
-ADV_WIDTH[$WORK_DIR_PATH/piscine]=2
-
 compdef _pr_completion pr
 
-# pyfiglet -f small "Praise the Emperor!" | center_text
-# _center_text << "EOF"
-# ;+xxxxxxxxxxxxxxxXXXXXXXXXXXXXXXX$$$$+                      :$&&&&&&&&&&&&&&&$$$$$$$$$$$XXXXXXXXXXX;
-#  +&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&X.                         .&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&x  
-#  .xxxxx+++;;;::::::::;;++xXX$&&&$:    ;&;&&&x.     :x&&&&;     +&&&&&&&&&&&$Xxx+;;::........ ..    
-#    .xX$$&&&&&&&&&&&&&&$XxxX$$&&&.   ;$$+:+x+&&x  ;$&&x&++$&+   :&&&&$XxxX$&&&&&&&&&&&&&&&&&&$:     
-#      ;&&&&&&&$x;...:+$&&&&&&&&&&.    ..    ;&&&.+X&&;     :    ;&&&$+$&&&&&&$x;:.:+X$&&&&&$:       
-#            .:;X&&&&&&&&&$X;+&&&&$:     .:x&X:X.XX:+.X&&&x;:::+&&&&&&&&$;:+X$&&&&&&&&$x;:           
-#          +&&&&&&&&&$+;:;X&&&X$&&&&&&&&&&&&&&&:+&&+:&&&&&&&&&&&&&&&&Xx&&&&&$x;.;+$&&&&&X.           
-#            ;&&&+.  :X&&&&&;+&&&X&&&&&&&&&$X&x;&&&&:X&X+&$&&&&&&&&$&&&x:x&&&&&&&$+. .:.             
-#                .;&&&&&&X.:&&&$+&&+X&$$&;;&&$;$&&&&& &&x.:&$+&&:&&&:$&&&X. x&&&&&&&+                
-#                 +&&&&; ;&&&&;x&&X+&&:&Xx&&&+X&&&&&&$.&&X.xX;&&&;&&&+:$&&&$; .+$X:                  
-#                   :. :$&&&X.x&&$:X&$ ::$&&x+&&&&&&&&X;&&&  .X&&x+&&&X +&&&&&+                      
-#                      :$&&:.X&&& +&$.     .:&&&&&&&&&&;.      +$$:x&&&X  $&x                        
-#                           +xX$. ;         x&&&&&&&&&&X           .;+++:                            
-#                                          xX;x&&&&&&&+xx                                            
-#                                         x&$:Xx&&&&X&X;&x                                           
-#                                     +XX$&&.x+$X&$X$$&+.$&&$&;                                      
-#                                     .;+&&&x.x&x&&X$...x&X&;+.                                      
-#                                      ;&:+X    &&&;    :$X.$:                                       
-#                                     .$x        +:        +XX:                                      
-#EOF
-
 _refresh
-
-if [ "$PWD" = "$HOME" ]; then
-    cd "$CURRENT_PROJECT"
-fi

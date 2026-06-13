@@ -11,7 +11,7 @@ adv - create and enter sequential exercise/task directories in a git project
 is a helper function for working inside git-based learning or exercise projects.
 
 It automatically determines the git repository root and creates a new sequential
-directory based on a prefix pattern (e.g. ex0, ex1, ex2 or task0, task1, etc.) at root.
+directory based on a prefix pattern (e.g. ex0, ex1, ex2 or task0, task1, etc.) at root. (set-up instructions in README.md)
 
 The function then enters the newly created directory and initializes a starter file
 based on the selected prefix.
@@ -24,7 +24,7 @@ prefix<number>
 
 The next highest number is used.
 
-If configured per-repository, behavior can be customized via associative arrays (see more in wiki):
+If configured per-repository, behavior can be customized via associative arrays (see more in README.md):
 
 .RS
 ADV_PREFIX[repo_root]
@@ -75,7 +75,7 @@ task02
 
 depending on configuration.
 
-After creation, the function:
+After creation, the function's will (behavior can be customized by editing `_adv_task`):
 
 .RS
 1. Enters the new directory
