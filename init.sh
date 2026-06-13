@@ -2,17 +2,6 @@
 
 export MANPATH="$HOME/.local/share/man:$MANPATH"
 
-# HOD FUNCTIONS
-
-_center_text() {
-  local width=$(tput cols)
-  while IFS= read -r line; do
-    local len=${#line}
-    local padding=$(( (width - len) / 2 ))
-    printf "%*s%s\n" "$padding" "" "$line"
-  done
-}
-
 _pr_completion() {
     local -a projects
     projects=(${(f)"$(find "$WORK_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n")"})
