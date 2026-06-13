@@ -23,6 +23,12 @@ _refresh () {
 	done
 }
 
+manup() {
+    cp "$WORK_DIR/hand_of_god/man_pages/"* "$MAN_PATH"/ || return
+
+    printf '%s\n' "Man pages updated."
+}
+
 refresh () {
 	_refresh
 	printf "Functions refreshed\n"
