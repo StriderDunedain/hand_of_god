@@ -16,6 +16,13 @@
 
 * Avoid adding overly specific aliases or wrappers for common commands. Personal shortcuts (for example, using func as an alias for git status) should generally be kept in a separate file excluded from version control. Exceptions may be made for aliases and wrappers that are widely recognized and have intuitive names (for example, la for ls -A "$@"). Such exceptions are subject to community review and may be accepted or rejected based on community consensus.
 
+* Current structure follows these rules:
+ - `cli.sh` - general functions that have to do with terminal usage irrespective of any projects (like `la`, `ce` or `up`)
+ - `git.sh` - anything that has to do with version control
+ - `project.sh` - functions that are used on different projects or their workflows (to be split into different files as the size increases)
+ - `deprecated.sh` - functions that have since been deprecated and, albeit working, shouldn't be used anymore, kept for historical and backwards compatibility uses
+ - `validators.sh` - validators, it's really that simple
+
 ## Documentation
 
 * Update the relevant man pages when adding or modifying functionality.
