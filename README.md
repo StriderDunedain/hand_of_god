@@ -70,11 +70,7 @@ These values may be defined independently for as many projects as desired.
 
 Hand of God ships with man pages for its functions.
 
-Install them with:
-
-```shell
-mv man_pages/* ~/.local/share/man/man1
-```
+Install them using the `manup` command
 
 After installation, use:
 
