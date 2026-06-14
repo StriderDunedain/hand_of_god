@@ -14,6 +14,8 @@ md () { mkdir -p "$@" }  # 'Make directory'
 
 l () { dm-tool lock }  # Lock screen
 
+tch () { touch "$@" }
+
 up () {
 	N=${1:-1}
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export MAN_PATH="$HOME/.local/share/man/man1"
+export MANPATH="$HOME/.local/share/man:$MANPATH"
 
 _pr_completion() {
     local -a projects
@@ -26,7 +26,7 @@ _refresh () {
 manup() {
     cp "$WORK_DIR/hand_of_god/man_pages/"* "$MAN_PATH"/ || return
 
-    printf '%s\n' "Man pages updated."
+    printf '%s\n' "Man pages updated"
 }
 
 refresh () {

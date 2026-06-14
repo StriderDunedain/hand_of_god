@@ -18,10 +18,9 @@ wrt () {
 		shift
 	done
 
-	if [[ $norm -eq 1 ]]; then
-		_wrt_42_check "$no_readme"
-		printf "\n"
-	fi
+	(( norm )) && _wrt_42_check "$no_readme" || return
+
+	printf "\n"
 
 	local artifact_files=( *.out(N) *.o(N) *.a(N) )
 
@@ -98,12 +97,12 @@ _wrt_42_check () {
 
 	if [[ $no_readme -eq 0 && ! -f README.md ]]; then
         printf "\nAdd a README.md file. Aborting\n" >&2
-        return 1
+        return
     fi
 
     if ! norminette; then
         printf "\nNorm errors found. Fix before committing\n" >&2
-        return 1
+        return
     fi
 }
 
