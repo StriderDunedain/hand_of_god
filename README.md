@@ -54,15 +54,30 @@ The `adv` function may be customized through the following arrays:
 * `ADV_WIDTH` — the width used when numbering folders.
 * `ADV_NAME_REQUIRED` — whether `adv` requires a filename when creating the next item. Defaults to false.
 
-Example:
-
+Here's an example:
 ```shell
+typeset -g -A ADV_PREFIX
+typeset -g -A ADV_WIDTH
+typeset -g -A ADV_NAME_REQUIRED
+
 ADV_PREFIX[$CURRENT_PROJECT]="ex"
 ADV_WIDTH[$CURRENT_PROJECT]=1
 ADV_NAME_REQUIRED[$CURRENT_PROJECT]=1
 ```
 
 These values may be defined independently for as many projects as desired.
+
+#### `wrt` (42 network specific)
+
+The `wrt` function may be customized through an array of folders to be checked by norminette (unless `--no-norm` in explicitly set)
+* `NORM_COMPLIANT_DIRS` - a list of dirs to be included in the norminette check
+
+Here's an example:
+```shell
+NORM_COMPLIANT_DIRS=(
+  "$WORK_DIR/42-learning"
+)
+```
 
 ---
 

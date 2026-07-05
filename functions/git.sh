@@ -3,6 +3,7 @@
 wrt () {
 	local norm=1
 	local no_readme=0
+	local dir
 
 	printf "Wrapping everything up...\n\n"
 
@@ -18,9 +19,15 @@ wrt () {
 		shift
 	done
 
-	(( norm )) && _wrt_42_check "$no_readme" || return
-
-	printf "\n"
+	if (( norm )); then
+		for dir  in "${NORM_COMPLIANT_DIRS[@]}"; do
+			if [[ $PWD == "$dir" || "$PWD" == "$dir"/* ]]; then
+				_wrt_42_check "$no_readme" || return
+				printf "\n"
+				break
+			fi
+		done
+	fi
 
 	local artifact_files=( *.out(N) *.o(N) *.a(N) )
 

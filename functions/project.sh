@@ -94,38 +94,92 @@ pr () {
 	cd "$WORK_DIR/$project" || return 1
 }
 
-co () {
-	local -a cmd=(code -r)
-
-	while [[ $# -gt 0 ]]; do
-		case $1 in
-			-nw|--new-window)
-				cmd=(code -n) ;;
-			*)
-				break ;;
-		esac
-		shift
-	done
+co() {
+    local default_code_space="$WORK_DIR/dev.code-workspace"
+	# local -a cmd=(code)
 
 	if [[ $# -eq 0 ]]; then
-		"${cmd[@]}" .
+		code "$default_code_space"
 	else
-		"${cmd[@]}" "$@"
+		code "$default_code_space"
+		code "$@"
 	fi
+
+	# TODO: Implement later, VS Coode is such a pain
+	# while [[ $# -gt 0 ]]; do
+	# 	case $1 in
+	# 		-nw|--new-window)
+	# 			cmd=(code -n) ;;
+	# 		*)
+	# 			break ;;
+	# 	esac
+	# 	shift
+	# done
+
+    # local dir="$(realpath "${1:-$PWD}")"
+# 
+    # jq --arg dir "$dir" '
+        # if any(.folders[]; .path == $dir)
+        # then .
+        # else .folders += [{"path": $dir}]
+        # end
+    # ' "$ws" > "$ws.tmp" &&
+    # mv "$ws.tmp" "$ws"
+# 
+    # "${cmd[@]}" "$ws"
 }
+
+# co () {
+# 	local -a cmd=(code -r)
+
+# 	while [[ $# -gt 0 ]]; do
+# 		case $1 in
+# 			-nw|--new-window)
+# 				cmd=(code -n) ;;
+# 			*)
+# 				break ;;
+# 		esac
+# 		shift
+# 	done
+
+# 	if [[ $# -eq 0 ]]; then
+# 		"${cmd[@]}" .
+# 	else
+# 		"${cmd[@]}" "$@"
+# 	fi
+# }
 
 
 work () { cd "$WORK_DIR" }
 
-nr () { norminette }
+nr () { norminette "$@" }
 
 cpr () { cd "$CURRENT_PROJECT" }  # 'current project'
 
 # PYTHON
 
-py () {
-	[ $# -eq 0 ] && return
-	clear && python -I "$@"
+py() {
+    if [ $# -eq 0 ]; then
+        python
+        return
+    fi
+
+    file="$1"
+    shift
+
+    # Add .py extension if missing
+    [[ "$file" != *.py ]] && file="${file}.py"
+
+    # Create and open file if it doesn't exist
+    if [ ! -f "$file" ]; then
+        touch "$file"
+        code "$file"
+        return
+    fi
+
+    black "$file" >/dev/null 2>&1
+
+    python "$file" "$@"
 }
 
 # C/C++

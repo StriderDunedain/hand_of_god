@@ -14,6 +14,8 @@ md () { mkdir -p "$@" }  # 'Make directory'
 
 l () { dm-tool lock }  # Lock screen
 
+brb () { xset dpms force off }
+
 tch () { touch "$@" }
 
 up () {
