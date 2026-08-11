@@ -54,8 +54,8 @@ Optional exercise or task name.
 Required if ADV_NAME_REQUIRED is set for the repository.
 
 .SH BEHAVIOR
-When executed inside a directory matching the current prefix pattern
-(e.g. ex12), the function first returns to the git root before creating a new entry.
+The new directory is always created directly below the git repository root,
+even when the command is run from a nested directory.
 
 New directories are created sequentially:
 
@@ -98,7 +98,8 @@ Creates:
 .RS
 <name>.py
 .RE
-and opens it in VS Code.
+and opens it in VS Code. If no name is supplied, the file is named
+.BR main.py .
 
 .SH EXAMPLES
 .TP

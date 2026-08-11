@@ -3,7 +3,7 @@
 cpl - compile and run C/C++ programs quickly
 
 .SH SYNOPSIS
-cpl [OPTIONS]... [SOURCES]...
+cpl [OPTIONS]... [COMPILER_ARGUMENTS]... [-- PROGRAM_ARGUMENTS]...
 
 .SH DESCRIPTION
 cpl is a small helper that compiles C or C++ source files and optionally runs the resulting program.
@@ -26,8 +26,19 @@ Verbose mode: print compile and run commands
 Dry run: print commands without executing
 
 .TP
+.B -o FILE, --output FILE
+Write the executable to FILE instead of a.out
+
+.TP
 .B --
-Separate compiler arguments from program arguments
+End compiler arguments and pass all remaining arguments to the compiled program
+
+.SH ARGUMENTS
+Before
+.BR -- ,
+unrecognized short options and other arguments are passed to the compiler.
+At least one filename ending in a recognized C or C++ extension is required.
+Unknown long options are rejected to catch misspelled cpl options.
 
 .SH AUTHOR
 Written by Maksim Trukhinov <eldritch.gato@gmail.com>. GitHub: <StriderDunedain>

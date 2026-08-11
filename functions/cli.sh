@@ -10,13 +10,9 @@ ce () { mkdir -p "$1" && cd "$1"; }  # 'Create and enter'
 
 rd () { rm -rf "$@"; }  # 'Remove directory'
 
-md () { mkdir -p "$@" }  # 'Make directory'
+md () { mkdir -p "$@"; }  # 'Make directory'
 
-l () { dm-tool lock }  # Lock screen
-
-brb () { xset dpms force off }
-
-tch () { touch "$@" }
+tch () { touch "$@"; }
 
 up () {
 	N=${1:-1}

@@ -2,10 +2,20 @@
 
 # PROJECT LIFE CYCLE
 
+if ! declare -p ADV_PREFIX >/dev/null 2>&1; then
+	declare -gA ADV_PREFIX=()
+fi
+if ! declare -p ADV_WIDTH >/dev/null 2>&1; then
+	declare -gA ADV_WIDTH=()
+fi
+if ! declare -p ADV_NAME_REQUIRED >/dev/null 2>&1; then
+	declare -gA ADV_NAME_REQUIRED=()
+fi
+
 adv () {
 	local root
 	root=$(git rev-parse --show-toplevel 2>/dev/null) || return 1
-	root="${root:A}"
+	root=$(cd "$root" && pwd -P) || return 1
 	local prefix="${ADV_PREFIX[$root]:-ex}"
 	local width="${ADV_WIDTH[$root]:-1}"
 	local name_required="${ADV_NAME_REQUIRED[$root]:-0}"
@@ -23,23 +33,32 @@ adv () {
 	done
 
 	shift $((OPTIND - 1))
+	if (( $# > 1 )); then
+		printf "adv accepts at most one name\n" >&2
+		return 1
+	fi
 
-	local ex_name="$1"
+	local ex_name="${1:-}"
+
+	if [[ -z $prefix ]]; then
+		printf "Directory prefix cannot be empty\n" >&2
+		return 1
+	fi
+
+	if ! [[ $width =~ ^[0-9]+$ ]]; then
+		printf "Width must be a non-negative integer: %s\n" "$width" >&2
+		return 1
+	fi
 
 	if (( name_required )) && [[ -z $ex_name ]]; then
 		printf "Project requires an exercise name\n" >&2
 		return 1
 	fi
 
-	# if inside prefix* go to git root
-	if [[ ${PWD:t} == ${prefix}<-> ]]; then
-		cd "$root" || return 1
-	fi
+	dir_name=$(_adv_get_next_name "$root" "$prefix" "$width") || return 1
 
-	dir_name=$(_adv_get_next_name "$prefix" "$width") || return 1
-
-	mkdir -p "$dir_name" &&
-	cd "$dir_name"
+	mkdir "$root/$dir_name" || return 1
+	cd "$root/$dir_name" || return 1
 
 	_adv_task "$prefix" "$ex_name" || return 1
 }
@@ -94,67 +113,9 @@ pr () {
 	cd "$WORK_DIR/$project" || return 1
 }
 
-co() {
-    local default_code_space="$WORK_DIR/dev.code-workspace"
-	# local -a cmd=(code)
+nr () { norminette "$@"; }
 
-	if [[ $# -eq 0 ]]; then
-		code "$default_code_space"
-	else
-		code "$default_code_space"
-		code "$@"
-	fi
-
-	# TODO: Implement later, VS Coode is such a pain
-	# while [[ $# -gt 0 ]]; do
-	# 	case $1 in
-	# 		-nw|--new-window)
-	# 			cmd=(code -n) ;;
-	# 		*)
-	# 			break ;;
-	# 	esac
-	# 	shift
-	# done
-
-    # local dir="$(realpath "${1:-$PWD}")"
-# 
-    # jq --arg dir "$dir" '
-        # if any(.folders[]; .path == $dir)
-        # then .
-        # else .folders += [{"path": $dir}]
-        # end
-    # ' "$ws" > "$ws.tmp" &&
-    # mv "$ws.tmp" "$ws"
-# 
-    # "${cmd[@]}" "$ws"
-}
-
-# co () {
-# 	local -a cmd=(code -r)
-
-# 	while [[ $# -gt 0 ]]; do
-# 		case $1 in
-# 			-nw|--new-window)
-# 				cmd=(code -n) ;;
-# 			*)
-# 				break ;;
-# 		esac
-# 		shift
-# 	done
-
-# 	if [[ $# -eq 0 ]]; then
-# 		"${cmd[@]}" .
-# 	else
-# 		"${cmd[@]}" "$@"
-# 	fi
-# }
-
-
-work () { cd "$WORK_DIR" }
-
-nr () { norminette "$@" }
-
-cpr () { cd "$CURRENT_PROJECT" }  # 'current project'
+cpr () { cd "$CURRENT_PROJECT"; }  # 'Current project'
 
 # PYTHON
 
@@ -187,53 +148,59 @@ py() {
 cpl () {
 	local compiler=cc
 	local outfile=a.out
-
 	local verbose=false
 	local dry_run=false
-
-	local -a flags=()
-	local -a sources=()
+	local source_found=false
+	local -a compiler_args=()
 	local -a run_args=()
 
 	while [[ $# -gt 0 ]]; do
 		case $1 in
 			-s|--simple)
-				flags+=(-Wall -Wextra -Werror) ;;
+				compiler_args+=(-Wall -Wextra -Werror) ;;
 			-g|--debug)
-				flags+=(-g) ;;
+				compiler_args+=(-g) ;;
 			-n|--dry-run)
 				dry_run=true ;;
 			-v|--verbose)
 				verbose=true ;;
+			-o|--output)
+				if [[ $# -lt 2 ]]; then
+					printf "Missing filename after %s\n" "$1" >&2
+					return 1
+				fi
+				outfile="$2"
+				shift ;;
 			--)
 				shift
 				run_args=("$@")
 				break ;;
+			--*)
+				printf "Unknown cpl option: %s\n" "$1" >&2
+				return 1 ;;
 			*)
-				sources+=("$1") ;;
+				compiler_args+=("$1")
+				case $1 in
+					*.c)
+						source_found=true ;;
+					*.cpp|*.cc|*.cxx|*.C|*.CPP)
+						source_found=true
+						compiler=g++ ;;
+				esac
+				;;
 		esac
 		shift
 	done
-	
-	if ((${#sources[@]} == 0)); then
-		echo "No source files"
+
+	if ! $source_found; then
+		printf "No C or C++ source files supplied\n" >&2
 		return 1
 	fi
 
-	local file
-	for file in "${sources[@]}"; do
-		case $file in
-			*.cpp|*.cc|*.cxx|*.CPP)
-				compiler=g++
-				break ;;
-		esac
-	done
-
 	local -a cmd=(
 		"$compiler"
-		"${flags[@]}"
 		-o "$outfile"
-		"${sources[@]}"
+		"${compiler_args[@]}"
 	)
 
 	if $verbose || $dry_run; then
@@ -241,35 +208,52 @@ cpl () {
 		printf '%q ' "${cmd[@]}"
 		printf '\n'
 
-		printf 'Run: ./%q ' "$outfile"
-		printf '%q ' "${run_args[@]}"
+		local displayed_executable="$outfile"
+		if [[ $displayed_executable != */* ]]; then
+			displayed_executable="./$displayed_executable"
+		fi
+		printf 'Run: %q' "$displayed_executable"
+		if (( ${#run_args[@]} > 0 )); then
+			printf ' %q' "${run_args[@]}"
+		fi
 		printf '\n'
 
 		if $dry_run; then
 			return 0
 		fi
 	fi
- 
+
 	if ! "${cmd[@]}"; then
-		echo "Build failed"
+		printf "Build failed\n" >&2
 		return 1
 	fi
 
-	"./$outfile" "${run_args[@]}"
+	local executable="$outfile"
+	if [[ $executable != */* ]]; then
+		executable="./$executable"
+	fi
+
+	"$executable" "${run_args[@]}"
 }
 
 # SUPPORT FUNCTIONS
 
 _adv_get_next_name () {
-	local prefix="$1"
-	local width="$2"
+	local root="$1"
+	local prefix="$2"
+	local width="$3"
 
-	local dir num last=-1 format
+	local dir name number value last=-1 format
 
-	for dir in ${prefix}<->(/N); do
-		num="${dir:t}"
-		num="${num#$prefix}"
-		(( num > last )) && last=$num
+	for dir in "$root/$prefix"*; do
+		[[ -d $dir ]] || continue
+		name=${dir##*/}
+		number=${name#"$prefix"}
+		[[ $number =~ ^[0-9]+$ ]] || continue
+		value=$((10#$number))
+		if (( value > last )); then
+			last=$value
+		fi
 	done
 
 	if (( width > 0 )); then
@@ -291,8 +275,10 @@ _adv_task () {
 			code -r main.cpp
 			;;
 		ex)
-			touch "${ex_name}.py" &&
-			code -r "${ex_name}.py"
+			if [[ -z $ex_name ]]; then
+				ex_name=main
+			fi
+			touch "${ex_name}.py" && code -r "${ex_name}.py"
 			;;
 	esac
 }

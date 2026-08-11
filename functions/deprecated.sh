@@ -7,12 +7,11 @@ cln () {
 
 	echo "FUNCTION HAS BEEN DEPRECATED, USE 'wrt()' INSTEAD!"
 	echo " +++ Deleting .out files... +++ "
-	rm -f *.out(N)
-	rm -f .*.swp(N)
+	rm -f -- ./*.out ./.*.swp
 
 	echo " +++    Norminette says:    +++"
 	norminette
-	echo ""
+	echo
 
 	echo " +++  Following files left:  +++"
 	ls -A
@@ -20,7 +19,7 @@ cln () {
 
 hod () {
 	local HODPATH="$HOME/.local/share/man/man1"
-	cmd_name="$1"
+	local cmd_name="$1"
 
 	echo "THIS FUNCTION HAS BEEN DEPRECATED, USE THE MAN PAGES INSTEAD!"
 	if [[ $# -eq 1 ]]; then

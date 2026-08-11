@@ -2,8 +2,8 @@
 .SH NAME
 wrt - execute my usual git workflow for a project in 42
 
-.SH SYNOPSYS
-wrt [MESSAGE]
+.SH SYNOPSIS
+wrt [OPTIONS]... [MESSAGE]
 
 .SH OPTIONS
 .TP
@@ -16,7 +16,7 @@ Disable the check for the presence of a README.md
 
 .SH DESCRIPTION
 1. Check for 42 submitting requirements (presence of a README.md and norminette compliance) unless flags are set
-2. Delete all output files (guaranteed to clean everything up if project used cpl(1))
+2. Offer to delete top-level .out, .o, and .a build artifacts
 3. Stage for commit all files in the directory, commit them with the message provided (or a standard one, describing what happened to which files using git's (A), (M), etc.)
 4. Push to remote
 

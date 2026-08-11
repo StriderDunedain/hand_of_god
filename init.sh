@@ -3,10 +3,15 @@
 export MANPATH="$HOME/.local/share/man:$MANPATH"
 
 _pr_completion() {
-    local -a projects
-    projects=(${(f)"$(find "$WORK_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n")"})
+	local current_word project
+	current_word="${COMP_WORDS[COMP_CWORD]}"
 
-    _describe 'projects' projects
+	COMPREPLY=()
+	while IFS= read -r project; do
+		if [[ $project == "$current_word"* ]]; then
+			COMPREPLY+=("$project")
+		fi
+	done < <(find "$WORK_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" 2>/dev/null)
 }
 
 _refresh () {
@@ -34,6 +39,6 @@ refresh () {
 	printf "Functions refreshed\n"
 }
 
-compdef _pr_completion pr
+complete -F _pr_completion pr
 
 _refresh

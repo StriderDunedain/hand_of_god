@@ -1,6 +1,6 @@
 # Hand of God
 
-A collection of shell functions intended to make day-to-day work a little more convenient.
+A collection of Bash functions intended to make day-to-day work a little more convenient.
 
 Originally started as a personal collection, Hand of God aims to provide a growing set of reusable utilities for different workflows and environments. Functions are grouped according to their purpose, and shell-specific functionality is welcome as long as its requirements and compatibility are documented.
 
@@ -20,7 +20,7 @@ git clone https://github.com/StriderDunedain/hand_of_god.git
 
 Some functions (such as `refresh` and `pr`) assume that your projects are organized under a common parent directory (for example, `~/dev`). This layout is currently used throughout the project.
 
-The following variables should be defined in your shell configuration file (`.bashrc`, `.zshrc`, etc.):
+The following variables should be defined in your Bash configuration file (`.bashrc`):
 
 * `WORK_DIR` — the directory containing your projects. This variable is required.
 * `HOD_INIT` — the absolute path to Hand of God's `init.sh`. This variable is required.
@@ -31,7 +31,7 @@ The following variables should be defined in your shell configuration file (`.ba
 Example:
 
 ```shell
-# e.g. .zshrc
+# e.g. .bashrc
 export WORK_DIR="$HOME/dev"
 export HOD_INIT="$WORK_DIR/hand_of_god/init.sh"
 export CURRENT_PROJECT="$WORK_DIR/python/module03"
@@ -56,9 +56,9 @@ The `adv` function may be customized through the following arrays:
 
 Here's an example:
 ```shell
-typeset -g -A ADV_PREFIX
-typeset -g -A ADV_WIDTH
-typeset -g -A ADV_NAME_REQUIRED
+declare -A ADV_PREFIX
+declare -A ADV_WIDTH
+declare -A ADV_NAME_REQUIRED
 
 ADV_PREFIX[$CURRENT_PROJECT]="ex"
 ADV_WIDTH[$CURRENT_PROJECT]=1
@@ -97,6 +97,10 @@ to view a function's manual page.
 
 Man pages contain usage information, examples, dependencies, and shell compatibility notes.
 
+### VS Code checks
+
+Run the `Check Bash syntax` task from **Terminal > Run Task**. Syntax errors are shown as clickable entries in the Problems panel.
+
 ---
 
 ## Contributing
@@ -111,6 +115,6 @@ Whether you are fixing a bug, adding a new function, improving documentation, or
 
 Hand of God is not intended to be a framework or a strict standard. It is simply a collection of practical shell functions that others may find useful.
 
-Not every function is expected to work on every shell or operating system. Shell-specific implementations are perfectly acceptable, provided their requirements and compatibility are documented.
+The functions are written for Bash. Operating-system-specific commands may still require extra software, as documented by their manual pages.
 
 Feel free to use, modify, and adapt these functions to your heart's content. Hopefully, some of them will make your own command-line experience a little easier.
